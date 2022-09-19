@@ -31,13 +31,13 @@ def parse_args():
     parser.add_argument(
         "--steps",
         type=int,
-        default=20,
+        default=50,
         help="number of ddim sampling steps"
     )
     parser.add_argument(
         "--extras",
         type=str,
-        default="HQ, 4K",
+        default=" ",
         help="to append to prompt"
     )
     
@@ -56,17 +56,16 @@ def main(args):
 
     artists = ("Makoto Shinkai, Joseph Mallord William Turner, Guillermo del Toro,"
                "Salvador Dali, DOOM, Hasui Kawase, Hidetaka Miyazaki, Hans Ruedi Giger,"
+               "Diego Rivera, Frida Kahlo, Samy Benmayor, Oswaldo Guayasamín, Roberto Matta, Pedro Lira,"
                "John Martin, Dawid Jurek, Claude Monet, Vincent Van Gogh, Alan Lee, Beksiński").split(",")
 
     cities = "Santiago in Chile, Valparaiso in Chile".split(",")
-
-    extras = ""
 
     
     results = []
     for artist in artists[:args.n]:
         for city in cities:
-            prompt = f"The city of {city} by {artist} {extras}"
+            prompt = f"The city of {city} by {artist} {args.extras}"
             pil_img = run_inference(prompt)
             results.append([prompt, pil_img, artist, city])
             
