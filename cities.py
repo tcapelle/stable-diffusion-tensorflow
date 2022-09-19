@@ -58,15 +58,15 @@ def main(args):
                "Salvador Dali, DOOM, Hasui Kawase, Hidetaka Miyazaki, Hans Ruedi Giger,"
                "John Martin, Dawid Jurek, Claude Monet, Vincent Van Gogh, Alan Lee, Beksiński").split(",")
 
-    cities = "Santigo in Chile, Valparaiso in Chile".split(",")
+    cities = "Santiago in Chile, Valparaiso in Chile".split(",")
 
-    extras = "HQ, 4K"
+    extras = ""
 
     
     results = []
     for artist in artists[:args.n]:
         for city in cities:
-            prompt = f"The city of {city} in the style of {artist} {extras}"
+            prompt = f"The city of {city} by {artist} {extras}"
             pil_img = run_inference(prompt)
             results.append([prompt, pil_img, artist, city])
             
