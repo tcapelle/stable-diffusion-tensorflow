@@ -1,6 +1,7 @@
 import numpy as np
 from tqdm import tqdm
-import math
+import math, time
+import wandb
 
 import tensorflow as tf
 from tensorflow import keras
@@ -62,10 +63,16 @@ class Text2Image:
         latent, alphas, alphas_prev = self.get_starting_parameters(
             timesteps, batch_size, seed
         )
+        
+        def decode_latent(latent):
+            decoded = self.decoder.predict_on_batch(latent)
+            decoded = ((decoded+1)/2)*255
+            return np.clip(decoded, 0 , 255).astype('uint8')
 
         # Diffusion stage
         progbar = tqdm(list(enumerate(timesteps))[::-1])
         for index, timestep in progbar:
+            t0 = time.perf_counter()
             progbar.set_description(f"{index:3d} {timestep:3d}")
             e_t = self.get_model_output(
                 latent,
@@ -75,15 +82,20 @@ class Text2Image:
                 unconditional_guidance_scale,
                 batch_size,
             )
+            # wandb.log({"e_t": wandb.Image(decode_latent(e_t)),
+            #            "latent": wandb.Image(decode_latent(latent)),
+            #            "index": index,
+            #            "timestep": timestep})
+
             a_t, a_prev = alphas[index], alphas_prev[index]
             latent, pred_x0 = self.get_x_prev_and_pred_x0(
                 latent, e_t, index, a_t, a_prev, temperature, seed
             )
+            wandb.log({"sec_per_it": time.perf_counter() - t0})
+
 
         # Decoding stage
-        decoded = self.decoder.predict_on_batch(latent)
-        decoded = ((decoded + 1) / 2) * 255
-        return np.clip(decoded, 0, 255).astype("uint8")
+        return decode_latent(latent)
 
     def timestep_embedding(self, timesteps, dim=320, max_period=10000):
         half = dim // 2
