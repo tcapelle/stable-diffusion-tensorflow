@@ -1,5 +1,5 @@
 import wandb
-import argparse
+import argparse, random
 from PIL import Image
 from types import SimpleNamespace
 
@@ -27,6 +27,7 @@ def parse_args():
     parser.add_argument("--jit_compile", action="store_true", help="jit_compile")
     parser.add_argument("--mp", action="store_true", help="mp")
     parser.add_argument("--log", action="store_true", help="log result to wandb")
+    parser.add_argument("--n", type=int, default=1, help="number of runs")
     args = parser.parse_args()
     return args
 
@@ -36,20 +37,23 @@ def main(args):
         keras.mixed_precision.set_global_policy("mixed_float16")
 
     generator = Text2Image(img_height=args.H, img_width=args.W, jit_compile=args.jit_compile)
-    
-    img = generator.generate(
-            args.prompt,
-            num_steps=args.steps,
-            unconditional_guidance_scale=args.scale,
-            temperature=1,
-            batch_size=1,
-            seed=args.seed,
-    )
+    results = []
+    for _ in range(args.n):
+        img = generator.generate(
+                args.prompt,
+                num_steps=args.steps,
+                unconditional_guidance_scale=args.scale,
+                temperature=1,
+                batch_size=1,
+                seed=args.seed if args.n == 1 else random.randint(0,1e15),
+        )
+        results.append(img)
 
     if args.log:
-        pil_img = Image.fromarray(img[0])
         table = wandb.Table(columns=["prompt", "image"])
-        table.add_data(args.prompt, wandb.Image(pil_img))
+        for img in results:
+            pil_img = Image.fromarray(img[0])
+            table.add_data(args.prompt, wandb.Image(pil_img))
         wandb.log({"Inference_results":table})
 
 if __name__ == "__main__":
