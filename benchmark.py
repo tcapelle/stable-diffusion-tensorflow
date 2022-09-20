@@ -37,7 +37,8 @@ def main(args):
         keras.mixed_precision.set_global_policy("mixed_float16")
 
     generator = Text2Image(img_height=args.H, img_width=args.W, jit_compile=args.jit_compile)
-
+    
+    t0 = time.perf_counter()
     _ = generator.generate(
             prompt,
             num_steps=args.steps,
@@ -46,13 +47,12 @@ def main(args):
             batch_size=1,
             seed=args.seed,
     )
+    tf = time.perf_counter() - t0
+    wandb.log({"sec_per_it": tf / args.steps})
 
 
 if __name__ == "__main__":
     args = parse_args()
 
     with wandb.init(project=PROJECT, job_type=JOB_TYPE, group=GROUP, config=args):
-        t0 = time.perf_counter()
         main(args)
-        tf = time.perf_counter() - t0
-        wandb.log({"sec_per_it": tf / args.steps})
