@@ -48,7 +48,7 @@ def main(args):
             seed=args.seed,
     )
     tf = time.perf_counter() - t0
-    wandb.log({"sec_per_it": tf / args.steps})
+    wandb.summary["sec_per_it"] = tf / args.steps
 
 
 if __name__ == "__main__":
